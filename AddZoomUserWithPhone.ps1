@@ -1,3 +1,4 @@
+#Create a pre-provisioned user, assign them a phone license and the first available number
 function AddZoomUserWithPhone {
 	param(
 		[parameter(Mandatory)]
