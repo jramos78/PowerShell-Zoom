@@ -1,7 +1,8 @@
-The Zoom API documentation can be found at https://marketplace.zoom.us/docs/api-reference/zoom-api
+<#
 
-#Note: The first step to get started is to request a token from Zoom, which requires creating a JWT app on Zoom.
-#Source: https://gist.github.com/hthoma/8715fc28523270141aa11cb8c87d4138
+Before making any API calls to your Zoom account, you must request API keys and use them with this script to generate a temporary Jave Web Token (JWT). The source of the script below can be found athttps://gist.github.com/hthoma/8715fc28523270141aa11cb8c87d4138
+
+#>
 #Request a JWT token from Zoom
 function Generate-JWT (
     [Parameter(Mandatory = $True)]
