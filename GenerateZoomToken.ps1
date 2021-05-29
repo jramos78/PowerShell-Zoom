@@ -3,17 +3,16 @@
 Before making any API calls to your Zoom account, you must request API keys and use them with this script to generate a temporary Jave Web Token (JWT). The source of the script below can be found athttps://gist.github.com/hthoma/8715fc28523270141aa11cb8c87d4138
 
 #>
-#Request a JWT token from Zoom
 function Generate-JWT (
     [Parameter(Mandatory = $True)]
     [ValidateSet("HS256", "HS384", "HS512")]
     $Algorithm = $null,
     $type = $null,
-    [Parameter(Mandatory = $True)]
-    [string]$Issuer = $null,
+    [Parameter(Mandatory = $True,HelpMessage="Enter your API key")]
+    [string]$Issuer,
     [int]$ValidforSeconds = $null,
-    [Parameter(Mandatory = $True)]
-    $secretKey = $null
+    [Parameter(Mandatory = $True,HelpMessage="Enter your API secret key")]
+    $secretKey
     ){
         #Grab Unix Epoch Timestamp and add desired expiration.
         $exp = [int][double]::parse((Get-Date -Date $((Get-Date).AddSeconds($ValidforSeconds).ToUniversalTime()) -UFormat %s)) 
@@ -36,13 +35,11 @@ function Generate-JWT (
 }
 #Set the token's lifetime
 $ValidforSeconds = 600
-#Set the Zoom JWT app API key and secret
-$apiKey = "<your API key>"
-$apiSecret = "<your API key secret>"
 #Generate JWT token for use in API calls
-$token = Generate-JWT -Algorithm "HS256" -Type "JWT" -Issuer $apiKey -SecretKey $apiSecret -ValidforSeconds $ValidforSeconds
+$token = Generate-JWT -Algorithm "HS256" -Type "JWT" -ValidforSeconds $ValidforSeconds
 #Generate the API call header
 [string]$contentType = "application/json"
 $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add("Content-Type", $contentType)
 $headers.Add("Authorization", "Bearer $token")  
+
