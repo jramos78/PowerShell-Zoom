@@ -1,0 +1,47 @@
+The Zoom API documentation can be found at https://marketplace.zoom.us/docs/api-reference/zoom-api
+
+#Note: The first step to get started is to request a token from Zoom, which requires creating a JWT app on Zoom.
+#Source: https://gist.github.com/hthoma/8715fc28523270141aa11cb8c87d4138
+#Request a JWT token from Zoom
+function Generate-JWT (
+    [Parameter(Mandatory = $True)]
+    [ValidateSet("HS256", "HS384", "HS512")]
+    $Algorithm = $null,
+    $type = $null,
+    [Parameter(Mandatory = $True)]
+    [string]$Issuer = $null,
+    [int]$ValidforSeconds = $null,
+    [Parameter(Mandatory = $True)]
+    $secretKey = $null
+    ){
+        #Grab Unix Epoch Timestamp and add desired expiration.
+        $exp = [int][double]::parse((Get-Date -Date $((Get-Date).AddSeconds($ValidforSeconds).ToUniversalTime()) -UFormat %s)) 
+        [hashtable]$header = @{alg = $Algorithm; typ = $type}
+        [hashtable]$payload = @{iss = $Issuer; exp = $exp}
+        $headerJson = $header | ConvertTo-Json -Compress
+        $payloadJson = $payload | ConvertTo-Json -Compress
+        $headerJsonBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($headerJson)).Split('=')[0].Replace('+', '-').Replace('/', '_')
+        $payloadJsonBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($payloadJson)).Split('=')[0].Replace('+', '-').Replace('/', '_')
+        $toBeSigned = $headerJsonBase64 + "." + $payloadJsonBase64
+        $signingAlgorithm = switch ($Algorithm) {
+            "HS256" {New-Object System.Security.Cryptography.HMACSHA256}
+            "HS384" {New-Object System.Security.Cryptography.HMACSHA384}
+            "HS512" {New-Object System.Security.Cryptography.HMACSHA512}
+        }
+        $signingAlgorithm.Key = [System.Text.Encoding]::UTF8.GetBytes($secretKey)
+        $signature = [Convert]::ToBase64String($signingAlgorithm.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($toBeSigned))).Split('=')[0].Replace('+', '-').Replace('/', '_')
+        $token = "$headerJsonBase64.$payloadJsonBase64.$signature"
+        $token
+}
+#Set the token's lifetime
+$ValidforSeconds = 600
+#Set the Zoom JWT app API key and secret
+$apiKey = "<your API key>"
+$apiSecret = "<your API key secret>"
+#Generate JWT token for use in API calls
+$token = Generate-JWT -Algorithm "HS256" -Type "JWT" -Issuer $apiKey -SecretKey $apiSecret -ValidforSeconds $ValidforSeconds
+#Generate the API call header
+[string]$contentType = "application/json"
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Content-Type", $contentType)
+$headers.Add("Authorization", "Bearer $token")  
